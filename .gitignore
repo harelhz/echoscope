@@ -1,0 +1,17 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+dist/
+build/
+.pytest_cache/
+.ruff_cache/
+
+# Local data: never commit collected posts or Telegram sessions
+*.db
+*.session
+*.session-journal
+echoscope-demo.html
+report.html
+report.json
+.env

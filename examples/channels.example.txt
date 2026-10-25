@@ -1,0 +1,4 @@
+# One public Telegram channel per line: @handle, handle, or https://t.me/handle
+# Lines starting with # are ignored. Replace these with channels relevant to your research.
+@durov
+https://t.me/telegram

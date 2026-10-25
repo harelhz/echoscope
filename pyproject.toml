@@ -1,0 +1,55 @@
+[build-system]
+requires = ["hatchling>=1.24"]
+build-backend = "hatchling.build"
+
+[project]
+name = "echoscope"
+version = "0.1.0"
+description = "Detect coordinated influence campaigns across public messaging channels."
+readme = "README.md"
+license = "Apache-2.0"
+requires-python = ">=3.10"
+authors = [{ name = "harelhz" }]
+keywords = ["osint", "disinformation", "influence-operations", "telegram", "cib", "threat-intelligence"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "Intended Audience :: Information Technology",
+    "Programming Language :: Python :: 3",
+    "Topic :: Security",
+    "Topic :: Sociology",
+]
+dependencies = [
+    "numpy>=1.26",
+    "networkx>=3.2",
+    "typer>=0.12",
+    "rich>=13.7",
+]
+
+[project.urls]
+Homepage = "https://github.com/harelhz/echoscope"
+Issues = "https://github.com/harelhz/echoscope/issues"
+
+[project.optional-dependencies]
+telegram = ["telethon>=1.36"]
+media = ["imagehash>=4.3", "pillow>=10.0"]
+dev = ["pytest>=8.0", "ruff>=0.5"]
+all = ["echoscope[telegram,media]"]
+
+[project.scripts]
+echoscope = "echoscope.cli:app"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/echoscope"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "SIM"]
+ignore = ["SIM905"]  # "a b c".split() reads better than long list literals
