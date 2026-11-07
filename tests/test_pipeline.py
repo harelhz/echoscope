@@ -56,6 +56,21 @@ def test_channel_footer_links_do_not_merge_unrelated_posts():
     assert detect(posts, DetectionConfig(min_channels=2)).campaigns == []
 
 
+def test_one_channel_reusing_a_link_does_not_hide_it_for_other_channels():
+    # Short teaser + link: only the URL links these posts.
+    link = "https://example.com/leak"
+    posts = [_post(f"ch{i}", i, text="Must read 👇", urls=[link]) for i in range(8)]
+    assert len(detect(posts).campaigns) == 1
+    # ch0 reposts the link later that day, crossing max_url_reuse for (ch0, link) only.
+    reposts = [
+        Post("test", "ch0", f"later{n}", T0 + timedelta(hours=4 + n), "Must read 👇", urls=[link])
+        for n in range(3)
+    ]
+    campaigns = detect(posts + reposts).campaigns
+    assert len(campaigns) == 1
+    assert set(campaigns[0].channels) == {f"ch{i}" for i in range(1, 8)}
+
+
 def test_densest_burst_picks_busiest_window():
     early = [_post(f"a{i}", i * 20) for i in range(3)]
     burst = [_post(f"b{i}", 200 + i) for i in range(6)]

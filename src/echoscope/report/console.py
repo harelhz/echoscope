@@ -33,8 +33,8 @@ def print_summary(result: DetectionResult, console: Console | None = None, limit
             str(len(c.channels)),
             f"{c.span_minutes:.0f}m",
             str(c.community or "-"),
-            f"@{c.origin.channel}",
-            c.headline,
+            Text(f"@{c.origin.channel}"),
+            Text(c.headline),
         )
     console.print(table)
     nets = sorted(set(result.communities.values()))
@@ -45,26 +45,31 @@ def print_summary(result: DetectionResult, console: Console | None = None, limit
         console.print(f"[bold]Coordinated networks:[/bold] {sizes}")
 
 
+def _fact(label: str, value: str) -> Text:
+    # Values come from monitored posts; Text keeps Rich from parsing them as markup.
+    return Text.assemble((f"{label}:", "bold"), " ", value)
+
+
 def print_campaign(c: Campaign, console: Console | None = None) -> None:
     console = console or Console()
     lines = [
-        f"[bold]Narrative:[/bold] {c.headline}",
-        f"[bold]Origin:[/bold] @{c.origin.channel} at {c.origin.timestamp:%Y-%m-%d %H:%M} UTC",
-        f"[bold]Spread:[/bold] {len(c.channels)} channels in {c.span_minutes:.0f} minutes",
+        _fact("Narrative", c.headline),
+        _fact("Origin", f"@{c.origin.channel} at {c.origin.timestamp:%Y-%m-%d %H:%M} UTC"),
+        _fact("Spread", f"{len(c.channels)} channels in {c.span_minutes:.0f} minutes"),
     ]
     if c.community:
-        lines.append(f"[bold]Network:[/bold] #{c.community}")
+        lines.append(_fact("Network", f"#{c.community}"))
     if c.shared_urls:
-        lines.append(f"[bold]Shared link:[/bold] {c.shared_urls[0]}")
+        lines.append(_fact("Shared link", c.shared_urls[0]))
     if c.shared_media:
-        lines.append(f"[bold]Shared image (pHash):[/bold] {c.shared_media[0]}")
-    console.print(Panel("\n".join(lines),
+        lines.append(_fact("Shared image (pHash)", c.shared_media[0]))
+    console.print(Panel(Text("\n").join(lines),
                         title=f"Campaign #{c.id}  score {c.score:.2f} ({c.confidence})",
                         border_style=_COLORS[c.confidence].split()[-1]))
 
     signals = Table("Signal", "Value", "Weight", "Why", box=None)
     for s in c.signals:
-        signals.add_row(s.name, f"{s.value:.2f}", f"{s.weight:.2f}", s.reason)
+        signals.add_row(Text(s.name), f"{s.value:.2f}", f"{s.weight:.2f}", Text(s.reason))
     console.print(signals)
 
     timeline = Table("+min", "Channel", "Type", box=None)
@@ -72,7 +77,8 @@ def print_campaign(c: Campaign, console: Console | None = None) -> None:
     shown = [c.origin] + [p for p in c.posts if p is not c.origin]
     for p in shown[:12]:
         kind = "forward" if p.is_forward else "copy"
-        timeline.add_row(f"{(p.timestamp - t0).total_seconds() / 60:5.1f}", f"@{p.channel}", kind)
+        timeline.add_row(f"{(p.timestamp - t0).total_seconds() / 60:5.1f}", Text(f"@{p.channel}"),
+                         kind)
     if len(shown) > 12:
         timeline.add_row("...", f"{len(shown) - 12} more", "")
     console.print(timeline)
