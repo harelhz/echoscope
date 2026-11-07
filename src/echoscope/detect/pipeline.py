@@ -99,7 +99,9 @@ def link_posts(posts: list[Post], cfg: DetectionConfig) -> list[list[int]]:
     msg_index = {post.key: i for i, post in enumerate(posts)}
     first_with: dict[str, int] = {}
     for i, post in enumerate(posts):
-        keys = [f"url:{u}" for u in _canonical_urls(post) if u not in boilerplate]
+        keys = [
+            f"url:{u}" for u in _canonical_urls(post) if (post.channel, u) not in boilerplate
+        ]
         if post.forward_of:
             keys.append(f"fwd:{post.forward_of}")
             if post.forward_of in msg_index:
@@ -117,16 +119,18 @@ def _canonical_urls(post: Post) -> list[str]:
     return [u for u in map(normalize_url, post.urls) if u]
 
 
-def _boilerplate_urls(posts: list[Post], max_reuse: int) -> set[str]:
-    """URLs a single channel attaches to many of its posts (footers, "join us" links).
+def _boilerplate_urls(posts: list[Post], max_reuse: int) -> set[tuple[str, str]]:
+    """(channel, URL) pairs where the channel attaches the URL to many of its posts.
 
-    Linking on these would merge everything a channel ever posted into one cluster.
+    These are footers and "join us" links: linking on them would merge everything
+    that channel ever posted into one cluster. The exclusion is per channel, so one
+    channel reposting a link cannot stop the other channels from linking on it.
     """
     per_channel: Counter[tuple[str, str]] = Counter()
     for post in posts:
         for url in set(_canonical_urls(post)):
             per_channel[(post.channel, url)] += 1
-    return {url for (_, url), n in per_channel.items() if n > max_reuse}
+    return {pair for pair, n in per_channel.items() if n > max_reuse}
 
 
 def _split_events(posts: list[Post], gap: timedelta) -> list[list[Post]]:

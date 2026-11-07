@@ -9,6 +9,7 @@ from typing import Annotated
 
 import typer
 from rich.console import Console
+from rich.text import Text
 
 from echoscope import __version__
 from echoscope.collectors.jsonl import read_jsonl, write_jsonl
@@ -43,16 +44,19 @@ def _parse_when(value: str | None) -> datetime | None:
 
 def _report(result: DetectionResult, details: int, html: Path | None,
             json_out: Path | None) -> None:
+    # Write the files first so a console rendering error cannot cost the analyst the report.
+    if html:
+        write_html(result, html)
+    if json_out:
+        write_json(result, json_out)
     print_summary(result, console)
     for campaign in result.campaigns[:details]:
         console.print()
         print_campaign(campaign, console)
     if html:
-        write_html(result, html)
-        console.print(f"\n[green]HTML report:[/green] {html}")
+        console.print("\n[green]HTML report:[/green]", Text(str(html)))
     if json_out:
-        write_json(result, json_out)
-        console.print(f"[green]JSON results:[/green] {json_out}")
+        console.print("[green]JSON results:[/green]", Text(str(json_out)))
 
 
 @app.command()
