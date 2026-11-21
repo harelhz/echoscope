@@ -21,7 +21,7 @@ jobs:
       - run: pytest
       - name: Demo smoke test
         run: echoscope demo --html demo.html
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: matrix.python-version == '3.12'
         with:
           name: demo-report
